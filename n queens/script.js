@@ -1,9 +1,9 @@
 let boardSize = 4;
-let boardState = [];
+let queens = []; // store all queen positions as {row, col}
 
 function startGame() {
   boardSize = parseInt(document.getElementById('nValue').value);
-  boardState = Array(boardSize).fill(-1);
+  queens = [];
   drawBoard();
   document.getElementById('status').innerText = 'Place your queens!';
 }
@@ -12,14 +12,17 @@ function drawBoard() {
   const board = document.getElementById('board');
   board.innerHTML = '';
   board.style.gridTemplateColumns = `repeat(${boardSize}, 1fr)`;
-  board.style.width = `${boardSize * 50}px`; // Ensures square grid
+  board.style.width = `${boardSize * 50}px`;
 
   for (let row = 0; row < boardSize; row++) {
     for (let col = 0; col < boardSize; col++) {
       const cell = document.createElement('div');
       cell.classList.add('cell');
       cell.classList.add((row + col) % 2 === 0 ? 'white' : 'black');
-      if (boardState[row] === col) cell.classList.add('queen');
+
+      if (queens.some(q => q.row === row && q.col === col)) {
+        cell.classList.add('queen');
+      }
 
       cell.addEventListener('click', () => toggleQueen(row, col));
       board.appendChild(cell);
@@ -28,10 +31,11 @@ function drawBoard() {
 }
 
 function toggleQueen(row, col) {
-  if (boardState[row] === col) {
-    boardState[row] = -1;
+  const index = queens.findIndex(q => q.row === row && q.col === col);
+  if (index >= 0) {
+    queens.splice(index, 1); // remove queen if clicked again
   } else {
-    boardState[row] = col;
+    queens.push({ row, col });
   }
 
   drawBoard();
@@ -39,25 +43,24 @@ function toggleQueen(row, col) {
 }
 
 function checkGameStatus() {
-  const placed = boardState.filter(c => c !== -1).length;
-
-  if (placed < boardSize) {
-    document.getElementById('status').innerText = `Queens placed: ${placed}/${boardSize}`;
+  if (queens.length < boardSize) {
+    document.getElementById('status').innerText = `Queens placed: ${queens.length}/${boardSize}`;
     return;
   }
 
   if (isValidBoard()) {
-    document.getElementById('status').innerText = "🎉 You Win! All queens are safe!";
+    document.getElementById('status').innerText = "Won!!!";
   } else {
-    document.getElementById('status').innerText = "❌ Queens are attacking each other. Try again!";
+    document.getElementById('status').innerText = "Queens are attacking each other, Try again!";
   }
 }
 
 function isValidBoard() {
-  for (let i = 0; i < boardSize; i++) {
-    for (let j = i + 1; j < boardSize; j++) {
-      if (boardState[i] === boardState[j]) return false;
-      if (Math.abs(boardState[i] - boardState[j]) === Math.abs(i - j)) return false;
+  for (let i = 0; i < queens.length; i++) {
+    for (let j = i + 1; j < queens.length; j++) {
+      if (queens[i].row === queens[j].row) return false;
+      if (queens[i].col === queens[j].col) return false;
+      if (Math.abs(queens[i].row - queens[j].row) === Math.abs(queens[i].col - queens[j].col)) return false;
     }
   }
   return true;
